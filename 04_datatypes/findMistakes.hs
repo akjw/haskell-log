@@ -1,0 +1,11 @@
+-- Ex: Find the mistakes
+-- 1) not True && True
+--    returns False; not True == False, False && True == False
+-- 2) not (x = 6)
+--    should be not (x == 6)
+-- 3) (1 * 2) > 5
+--    returns False; * will be evaluated before > so parentheses are unnecessary
+-- 4) [Merry] > [Happy]
+--     should be "Merry" > "Happy", which returns True, since 'M' > 'H'
+-- 5) [1, 2, 3] ++ "look at me!"
+--    (++) must be applied to arguments of the same type; should be "1, 2, 3" ++ "look at me!"
