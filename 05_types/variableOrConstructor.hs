@@ -1,0 +1,6 @@
+-- 2) fully polymorphic, concrete, concrete
+-- 3) 
+     --Enum b: constrained polymorphic
+     -- a: fully polymorphic
+     -- c: Concrete
+-- 4) fully polymorphic, fully polymorphic, concrete
