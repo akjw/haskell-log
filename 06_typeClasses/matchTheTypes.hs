@@ -14,8 +14,8 @@
 
 --8) no. see 7)
 
---9) yes. Int is a subclass of Ord
+--9) yes. Int has an instance of Ord
 
 --10) yes. sort takes type class constrained variable that must have instance of Ord
 
---11)  no. mySort expects [Char] as an argument, not Ord
+--11) no. mySort expects argument of type [Char], not Ord

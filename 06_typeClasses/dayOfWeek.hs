@@ -17,6 +17,12 @@ instance Eq DayOfWeek where
   (==) Sun Sun = True
   (==) _ _ = False 
 
+instance Ord DayOfWeek where
+  compare Fri Fri = EQ
+  compare Fri _ = GT
+  compare _ Fri = LT
+  compare _ _ = EQ
+
 -- to validate equality, make sure all constituent values are equal
 instance Eq Date where 
   (==) (Date weekday dayOfMonth)
