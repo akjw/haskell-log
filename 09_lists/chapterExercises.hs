@@ -109,7 +109,7 @@ mySqr = [x^2 | x <- [1..10]]
 -- OR: (length . filter (\x -> (rem x 3 )== 0)) [1..30]
 --3) myFilter xs = [x | x <- (words xs), not (elem x ["the", "a", "an"])]
 
--- Data.CHar
+-- Data.Char
 --2) getUpper xs = filter isUpper xs
 --3) capitalize (x:xs) = toUpper x : xs
 --4) 
@@ -122,4 +122,4 @@ mySqr = [x^2 | x <- [1..10]]
 -- capsFirst xs = toUpper $ head xs
 --6) 
 -- cfComposed xs = (toUpper . head) xs
--- cdPointfree = toUpper. head
+-- cfPointfree = toUpper. head
