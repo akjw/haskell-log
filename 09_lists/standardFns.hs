@@ -35,7 +35,7 @@ squishMap :: (a -> [b]) -> [a] -> [b]
 squishMap _ [] = []
 squishMap f (x:xs) =  f x ++ (squishMap f xs)
 
--- reuse map
+-- reuse squish
 -- squishMap f xs = squish (map f xs)
 
 --7)
@@ -67,7 +67,7 @@ myMaximumBy f (x:xs)
 -- myMaximumBy1 _ (x:[]) = x
 -- myMaximumBy1 f (x1:x2:xs)
 --   | f x1 x2 == GT = myMaximumBy1 f (x1:xs)
---   | otherwise     = myMaximumBy1 f (x2:xs)
+--   | otherwise = myMaximumBy1 f (x2:xs)
 
 --9)
 myMinimumBy :: (a -> a -> Ordering) -> [a] -> a
