@@ -52,14 +52,15 @@ myMaximumBy f (x:xs)
 
 -- Using max value tracker:
 -- myMaximumBy' :: (a -> a -> Ordering) -> [a] -> a
--- myMaximumBy' _ []  = error "list cannot be empty!"
--- myMaximumBy' f list = go f list (head list)
---   where
---     go f [] max = max 
+-- myMaximumBy' f list = 
+--   case list of
+--     [] -> error "list cannot be empty!"
+--     x : xs -> go f (x:xs) (head list) 
+--   where 
+--     go f [] max = max
 --     go f (x:xs) max 
---       | null (x:xs) = max
---       | f x max == GT = go f xs x
---       | otherwise = go f xs max
+--        | f x max == GT = go f xs x
+--        | otherwise = go f xs max
 
 -- Selecting pairs & recursively reducing list values to compare
 -- myMaximumBy1 :: (a -> a -> Ordering)
