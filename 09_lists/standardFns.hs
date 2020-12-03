@@ -55,8 +55,9 @@ myMaximumBy f (x:xs)
 -- myMaximumBy' _ []  = error "list cannot be empty!"
 -- myMaximumBy' f list = go f list (head list)
 --   where
---     go f (x: []) max = max 
+--     go f [] max = max 
 --     go f (x:xs) max 
+--       | null (x:xs) = max
 --       | f x max == GT = go f xs x
 --       | otherwise = go f xs max
 
