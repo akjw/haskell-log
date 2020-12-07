@@ -26,29 +26,23 @@ foldl (flip (*)) 1 [1..3]
 -- Warm-up and review
 --1)
   --a)
-  {-
-  stops = "pbtdkg"
-  vowels = "aeiou"
+      -- stops = "pbtdkg"
+      -- vowels = "aeiou"
 
-  threeTup = [(x, y, z) | x <- stops, y <- vowels, z <- stops]
-  -}
-
+      -- threeTup = [(x, y, z) | x <- stops, y <- vowels, z <- stops]
   --b) threeTupP = [(x, y, z) | x <- stops, y <- vowels, z <- stops, x == 'p']
-
   --c) 
   -- nouns = ["doggo", "catto", "gecko"]
   -- verbs = ["licks", "scratches", "cuddles"]
   -- threeTup' = [(x, y, z) | x <- nouns, y <- verbs, z <- nouns]
 
 --2) 
-{-
-seekritFunc :: String -> Int
-seekritFunc x = 
-  div (sum (map length (words x)))
-      (length (words x))
+-- seekritFunc :: String -> Int
+-- seekritFunc x = 
+--   div (sum (map length (words x)))
+--       (length (words x))
 
-The function gives the average length of words in the list created by (words x).
--}
+-- The function gives the average length of words in the list created by (words x).
 
 --3)
 -- seekritFracFunc :: Fractional a => String -> a
@@ -77,6 +71,7 @@ myReverse = foldl (flip (:)) []
 --5)
 myMap :: (a -> b) -> [a] -> [b]
 myMap f = foldr (\a b -> (f a) : b) []
+-- myMap f = foldr ((:) . f) []
 
 --6)
 myFilter :: (a -> Bool) -> [a] -> [a]
@@ -89,6 +84,7 @@ squish = foldr (++) []
 --8)
 squishMap :: (a -> [b]) -> [a] -> [b]
 squishMap f = foldr (\a b -> (f a) ++ b) []
+-- squishMap f = foldr ((++) . f) []
 
 --9) 
 squishAgain :: [[a]] -> [a]
