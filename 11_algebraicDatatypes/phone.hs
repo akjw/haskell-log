@@ -56,25 +56,6 @@ cellPhonesDead :: DaPhone -> String -> [(Digit, Presses)]
 cellPhonesDead phone str = (concat . map (reverseTaps phone)) str
 
 
--- countPresses :: Digit -> Letters -> Presses
--- countPresses c str = go (toLower c) str 1
---   where
---     go _ [] _ = 0 -- handle whitespace
---     go c (x:xs) count
---          | c == x = count 
---          | otherwise = go c xs (count + 1)
-
--- getKeySequence :: Char -> (Digit, Letters) -> [(Digit, Letters)] -> [(Digit, Presses)]
--- getKeySequence c tup [] = (fst tup, countPresses c (snd tup)) : []
--- getKeySequence c tup (x:xs)
---    | countPresses c (snd tup) == 0 = getKeySequence c x xs
---    | otherwise = (fst tup, countPresses c (snd tup)) : []
-
--- reverseTaps' :: DaPhone -> Char -> [(Digit, Presses)]
--- reverseTaps' (DaPhone keys) c 
---   | isUpper c = ('*', 1) : getKeySequence c (head keys) (drop 1 keys)
---   | otherwise = getKeySequence c (head keys) (drop 1 keys)
-
 --3)
 fingerTaps :: [(Digit, Presses)] -> Presses
 fingerTaps seq = sum [snd tups | tups <- seq]
