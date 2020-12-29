@@ -26,4 +26,8 @@ wordNumber n = concat . intersperse "-" $ words
 -- use map to turn each digit in list into word
   where words = map digitToWord $ digits n
 
+-- wordNumber' n = concat . intersperse "-" $ map digitToWord $ digits n
+
+-- wordNumber''  = concat . intersperse "-" . map digitToWord . digits 
+  
 
