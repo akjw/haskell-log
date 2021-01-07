@@ -5,6 +5,14 @@ import Data.Char
 -- cipher _ [] = []
 -- cipher n str = encode n $ toNums str
 
+runCipher :: IO ()
+runCipher = do
+  putStrLn "Enter shift number: "
+  n <- getLine
+  putStrLn "Enter string: "
+  str  <- getLine
+  putStrLn $ "Caesar: " ++ show (cipher' (read n) str)
+
 cipher' :: Int -> String -> String
 cipher' _ [] = []
 cipher' n str = encode' n $ map toNum str
