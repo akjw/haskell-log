@@ -1,5 +1,13 @@
 import Data.Char
 
+runCipher :: IO ()
+runCipher = do
+  putStrLn "Enter keyword: "
+  keyword <- getLine
+  putStrLn "Enter string: "
+  str  <- getLine
+  putStrLn $ "Vigenère: " ++ show (cipher keyword str)
+
 cipher :: [Char] -> String -> [Char]
 cipher keyword str = map toChar $ encode (cycleOffsetList keyword str) str
 
