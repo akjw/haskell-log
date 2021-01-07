@@ -73,6 +73,13 @@ natToInteger :: Nat -> Integer
 natToInteger Zero = 0
 natToInteger (Succ x) = 1 + natToInteger x
 
+-- natToInteger (Succ (Succ (Succ Zero)))
+-- = 1 + natToInteger (Succ (Succ Zero))
+-- = 1 + 1 + natToInteger (Succ Zero)
+-- = 1 + 1 + 1 + natToInteger Zero
+-- = 1 + 1 + 1 + 0
+-- = 3
+
 integerToNat :: Integer -> Maybe Nat
 integerToNat x = 
   case x < 0 of
@@ -81,6 +88,13 @@ integerToNat x =
     where 
       go 0 = Zero
       go y = Succ $ go (y-1)
+
+-- integerToNat 3 
+-- = Just (go 3)                  -- Just (Succ (Succ (Succ Zero)))
+-- = Succ $ go 2                  -- Succ (Succ (Succ Zero))
+--          Succ $ go 1           -- Succ (Succ Zero)
+--                 Succ $ go 0    -- Zero
+  
 
 -- Small library for Maybe
 --1)
@@ -97,8 +111,8 @@ isNothing Nothing = True
 --2)
 
 mayybee :: b -> (a -> b) -> Maybe a -> b
-mayybee def f (Just x) = f x
-mayybee def f Nothing = def
+mayybee _ f (Just x) = f x
+mayybee def _ Nothing = def
 
 --3)
 fromMaybe :: a -> Maybe a -> a
@@ -125,7 +139,7 @@ catMaybes' ls = go ls []
     go [] acc = acc
     go (x:xs) acc = case x of
                      Nothing -> go xs acc
-                     Just a -> go xs acc ++ [a]
+                     Just a -> go xs (acc ++ [a])
 --6) 
 flipMaybe :: [Maybe a] -> Maybe [a]
 flipMaybe ls = go ls []
@@ -189,7 +203,11 @@ myIterate f x = x : myIterate f (f x)
 myUnfoldr :: (b -> Maybe (a, b)) -> b -> [a]
 myUnfoldr f x = case f x of
                   Nothing -> []
-                  Just (a, b) -> a: myUnfoldr f b
+                  Just (a, b) -> a : myUnfoldr f b
+
+-- from hackage source code:
+-- >>> unfoldr (\b -> if b == 0 then Nothing else Just (b, b-1)) 10
+-- [10,9,8,7,6,5,4,3,2,1]
 
 betterIterate :: (a -> a) -> a -> [a]
 betterIterate f x = myUnfoldr (\x -> Just(x, f x)) x 
