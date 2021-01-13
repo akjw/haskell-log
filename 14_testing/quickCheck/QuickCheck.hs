@@ -1,6 +1,7 @@
 module QuickCheck where
-import Test.QuickCheck ( quickCheck )
+import Test.QuickCheck 
 import Data.List (sort)
+import Data.Char (toUpper)
 
 -- stack ghci
 
@@ -167,3 +168,76 @@ readShowQc  = do
       quickCheck (prop_readShow :: Char   -> Bool)
       quickCheck (prop_readShow :: Double -> Bool)
       quickCheck (prop_readShow :: String -> Bool)
+
+-- for a function
+square :: Num a => a -> a
+square x = x * x
+-- Why does this property not hold?
+-- Examine the type of sqrt.
+squareIdentity :: (Eq a, Floating a) => a -> Bool
+squareIdentity x = (square . sqrt) x == x
+
+-- fails because  sqrt gives an approximated answer (not perfectly precise)
+squareQc :: IO ()
+squareQc  = do
+  quickCheck (squareIdentity :: Double -> Bool)
+  quickCheck (squareIdentity :: Float -> Bool)
+
+-- Idempotence
+-- helper fns
+twice :: (b -> b) -> b -> b
+twice f = f . f
+
+fourTimes :: (b -> b) -> b -> b
+fourTimes = twice . twice
+
+--1) 
+prop_capIdempotence :: String -> Bool
+prop_capIdempotence x =
+  (capitalizeWord x
+  == twice capitalizeWord x)
+  &&
+  (capitalizeWord x
+  == fourTimes capitalizeWord x)
+
+capIdempotenceQc :: IO ()
+capIdempotenceQc = quickCheck prop_capIdempotence
+
+capitalizeWord :: String -> String
+capitalizeWord [] = []
+capitalizeWord (' ':xs) = ' ' : capitalizeWord xs
+capitalizeWord (x:xs) = toUpper x:xs
+
+
+--2)
+prop_sortIdempotence :: Ord a => [a] -> Bool
+prop_sortIdempotence x =
+  (sort x
+  == twice sort x)
+  &&
+  (sort x
+  == fourTimes sort x)
+
+sortIdempotenceQc :: IO ()
+sortIdempotenceQc = do
+  quickCheck (prop_sortIdempotence :: [Int] -> Bool)
+  quickCheck (prop_sortIdempotence :: [Double] -> Bool)
+  quickCheck (prop_sortIdempotence :: [Float] -> Bool)
+  quickCheck (prop_sortIdempotence :: [Char] -> Bool)
+
+-- Make a Gen random generator for the datatype
+--1) Equal probabilities for each:
+data Fool =
+    Fulse
+  | Frue
+  deriving (Eq, Show)
+
+genFool :: Gen Fool
+genFool = oneof [return $ Fulse, return $ Frue]
+-- genFool = frequency [(1, return Fulse), (1, return Frue)]
+
+--2) 2/3s chance of Fulse, 1/3 chance of Frue:
+genFoolThirds  :: Gen Fool
+genFoolThirds = frequency [(2, return Fulse), (1, return Frue)]
+
+
