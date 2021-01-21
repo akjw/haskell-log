@@ -138,7 +138,10 @@ type FstId =
 --   quickCheck (monoidRightIdentity :: FstId)
 
 
--- Semigroup exercises 
+-------------------------------------------------------------------------------------
+-- SEMIGROUP EXERCISES
+-------------------------------------------------------------------------------------
+
 --1)
 
 data Trivial = Trivial deriving (Eq, Show)
@@ -160,6 +163,15 @@ semigroupAssoc a b c =
 
 type TrivAssoc =
   Trivial -> Trivial -> Trivial -> Bool
+
+main1 :: IO ()
+main1 = do
+  let sa = semigroupAssoc
+      mli = monoidLeftIdentity
+      mlr = monoidRightIdentity
+  quickCheck (sa :: TrivAssoc)
+  quickCheck (mli :: Trivial -> Bool)
+  quickCheck (mlr :: Trivial -> Bool)
 
 --2)
 
@@ -297,20 +309,185 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (Or a b) where
 type OrII = Or (Sum Int) (Sum Int)
 type OrAssoc = OrII -> OrII -> OrII -> Bool
 
---8)
+--9)
 newtype Combine a b =
-  Combine { unCombine :: (a -> b) }
+  Combine { unCombine :: (a -> b) } 
 
+-- instance Show (Combine a b) where
+--   show (Combine _) = "Combine"
+
+-- since b is output only b needs a semigroup instance
+instance (Semigroup b) => Semigroup (Combine a b) where 
+  (<>) (Combine f) (Combine g) = Combine (f <> g)
+  -- (<>) (Combine f) (Combine g) = Combine (\x -> (f x) <> (g x))
+
+-- take b's implementation of mempty
+instance Monoid b => Monoid (Combine a b) where
+  mempty = Combine mempty 
+
+instance (CoArbitrary a, Arbitrary b) => Arbitrary (Combine a b) where
+  arbitrary = fmap Combine arbitrary
+
+prop_combAssoc :: (Eq b, Semigroup b)
+               => Blind (Combine a b) -- negates QuickCheck's need for show instance
+               -> Blind (Combine a b)
+               -> Blind (Combine a b)
+               -> a
+               -> Bool
+prop_combAssoc (Blind x) (Blind y) (Blind z) a =
+    unCombine ((x <> y) <> z) a ==
+    unCombine (x <> (y <> z)) a
+
+prop_combAssocInt :: Blind (Combine Int (Sum Int))
+                  -> Blind (Combine Int (Sum Int))
+                  -> Blind (Combine Int (Sum Int))
+                  -> Int
+                  -> Bool
+prop_combAssocInt = prop_combAssoc
+
+f = Combine $ \n -> Sum (n + 1)
+
+g = Combine $ \n -> Sum (n - 1)
+
+fg0test :: Sum Int
+fg0test = unCombine (f <> g) 0 
+
+fg1test :: Sum Int
+fg1test = unCombine (mappend f mempty) 0
+
+ff1test :: Sum Int
+ff1test = unCombine (f <> f) 1 
+
+gf1test :: Sum Int
+gf1test = unCombine (g <> f) 1
+
+--10)
+newtype Comp a =
+  Comp { unComp :: (a -> a) }
+
+instance Show (Comp a) where
+  show (Comp _) = "Comp"
+
+instance Semigroup (Comp a) where 
+  (<>) (Comp f) (Comp g) = Comp (f . g)
+
+instance Monoid (Comp a) where
+  mempty = Comp id
+
+instance (CoArbitrary a, Arbitrary a) => Arbitrary (Comp a) where
+  arbitrary = fmap Comp arbitrary
+
+prop_compAssoc :: (Eq a, Semigroup a)
+               => Blind (Comp a) -- negates QuickCheck's need for show instance
+               -> Blind (Comp a)
+               -> Blind (Comp a)
+               -> a
+               -> Bool
+prop_compAssoc (Blind x) (Blind y) (Blind z) a =
+    unComp ((x <> y) <> z) a ==
+    unComp (x <> (y <> z)) a
+
+prop_compAssocInt :: Blind (Comp (Sum Int))
+                  -> Blind (Comp (Sum Int))
+                  -> Blind (Comp (Sum Int))
+                  -> Sum Int
+                  -> Bool
+prop_compAssocInt = prop_compAssoc
+
+--11)
+data Validation a b =
+  Failure' a | Success' b
+  deriving (Eq, Show)
+
+instance Semigroup a => Semigroup (Validation a b) where
+  (<>) (Success' x) _           = Success' x
+  (<>) (Failure' x) (Failure' y) = Failure' (x <> y)
+  (<>)  _          x           = x
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Validation a b) where
+  arbitrary = frequency [(1, fmap Failure' arbitrary)
+                        , (1, fmap Success' arbitrary)]
+
+type ValidStrInt = Validation String Int
+type ValidAssoc = ValidStrInt -> ValidStrInt -> ValidStrInt -> Bool
+
+main' :: IO ()
+main' = do
+  let 
+      failure :: String -> Validation String Int
+      failure = Failure'
+      success :: Int -> Validation String Int
+      success = Success'
+  print $ success 1 <> failure "blah"  -- Success 1
+  print $ failure "woot" <> failure "blah" -- Failure "wootblah"
+  print $ success 1 <> success 2 -- Success 1
+  print $ failure "woot" <> success 2 -- Success 2
+
+
+-------------------------------------------------------------------------------------
+-- MONAD EXERCISES (1-7 interleaved w/ above)
+-------------------------------------------------------------------------------------
+
+-- 8) 
+newtype Mem s a =
+  Mem {
+    runMem :: s -> (a,s)
+  }
+-- Note: when constructing, written as such: Mem (\s -> ("hi", s + 1))
+
+-- Works by piping the output of first fn into the second
+instance Semigroup a => Semigroup (Mem s a) where
+    (<>) (Mem f) (Mem g) = Mem comb 
+      where comb s   =           -- s for the awaited argument
+             let (fa, fs) = f s  -- apply s to first fn
+                 (ga, gs) = g fs -- apply output of first fn to second fn
+             in  (fa <> ga, gs)  -- mappend fst in the 2 output tuples 
+
+-- ref. @johsi-k's solution:
+-- instance Semigroup a => Semigroup (Mem s a) where
+--   Mem x <> Mem y = Mem (\s -> let (a, s') = f s
+--                                   (a', s'') = g s'
+--                               in (a <> a', s''))
+
+instance Monoid a => Monoid (Mem s a) where
+  mempty = Mem (\s -> (mempty, s))
+
+f' = Mem $ \s -> ("hi", s + 1)
+
+main2 = do
+  let rmzero = runMem mempty 0
+      rmleft = runMem (f' <> mempty) 0
+      rmright = runMem (mempty <> f') 0
+  print $ rmleft                      -- ("hi", 1)
+  print $ rmright                     -- ("hi", 1)
+  print $ (rmzero :: (String, Int))   -- ("", 0)
+  print $ rmleft == runMem f' 0       -- True
+  print $ rmright == runMem f' 0      -- True
 
 
 main :: IO ()
 main = do
+  putStrLn "Tests for Trivial:"
   quickCheck (semigroupAssoc :: TrivAssoc)
+  putStrLn "Tests for Id:"
   quickCheck (semigroupAssoc :: IdAssocChar)
   quickCheck (semigroupAssoc :: IdAssocInt)
+  putStrLn "Tests for Two:"
   quickCheck (semigroupAssoc :: TwoAssoc)
+  putStrLn "Tests for Three:"
   quickCheck (semigroupAssoc :: ThreeAssoc)
+  putStrLn "Tests for Four:"
   quickCheck (semigroupAssoc :: FourAssoc)
+  putStrLn "Tests for BoolConj:"
   quickCheck (semigroupAssoc :: BoolCAssoc)
+  putStrLn "Tests for BoolDisj:"
   quickCheck (semigroupAssoc :: BoolDAssoc)
+  putStrLn "Tests for Or:"
   quickCheck (semigroupAssoc :: OrAssoc)
+  putStrLn "Tests for Combine:"
+  quickCheck prop_combAssocInt
+  putStrLn "Tests for Comp:"
+  quickCheck prop_compAssocInt
+  putStrLn "Tests for Validation:"
+  quickCheck (semigroupAssoc :: ValidAssoc)
+
