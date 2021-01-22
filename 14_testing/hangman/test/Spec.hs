@@ -7,7 +7,7 @@ import Lib
 main :: IO ()
 main = hspec $
     describe "fillInGuess" $ do
-      context "using 'aria' as test case" $ do
+      context "with 'aria' as test case" $ do
         let puzzle    = Puzzle "aria" [Nothing,  Nothing, Nothing, Nothing] ""
         it "fills in single occurence of correct letter" $ do
           -- let puzzle    = Puzzle "aria" [Nothing,  Nothing, Nothing, Nothing] ""
@@ -25,7 +25,7 @@ main = hspec $
           fillInCharacter puzzle 'z' `shouldBe` updatedPuzzle
 
       describe "handleGuess" $ do
-        context "using 'aria' as test case" $ do
+        context "with 'aria' as test case" $ do
           let puzzle    = Puzzle "aria" [Nothing,  Nothing, Nothing, Nothing] ""
           it "handles single occurence of correct letter" $ do
               updatedPuzzle <- handleGuess puzzle 'i'
