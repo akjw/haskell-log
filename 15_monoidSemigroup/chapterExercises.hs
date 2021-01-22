@@ -139,7 +139,7 @@ type FstId =
 
 
 -------------------------------------------------------------------------------------
--- SEMIGROUP EXERCISES
+-- SEMIGROUP & MONOID EXERCISES
 -------------------------------------------------------------------------------------
 
 --1)
@@ -315,6 +315,8 @@ newtype Combine a b =
 
 -- instance Show (Combine a b) where
 --   show (Combine _) = "Combine"
+-- this is not perfect, but a show instance can't be implemented for 
+-- (Combine x) since x is a fn 
 
 -- since b is output only b needs a semigroup instance
 instance (Semigroup b) => Semigroup (Combine a b) where 
@@ -325,6 +327,10 @@ instance (Semigroup b) => Semigroup (Combine a b) where
 instance Monoid b => Monoid (Combine a b) where
   mempty = Combine mempty 
 
+-- CoArbitrary class: for random generation of functions.
+-- coarbitrary :: a -> Gen b -> Gen b
+-- Used to generate a function of type a -> b. 
+-- The first argument is a value, the second a generator. 
 instance (CoArbitrary a, Arbitrary b) => Arbitrary (Combine a b) where
   arbitrary = fmap Combine arbitrary
 
@@ -425,7 +431,7 @@ main' = do
 
 
 -------------------------------------------------------------------------------------
--- MONAD EXERCISES (1-7 interleaved w/ above)
+-- MONAD EXERCISE 
 -------------------------------------------------------------------------------------
 
 -- 8) 
@@ -442,6 +448,39 @@ instance Semigroup a => Semigroup (Mem s a) where
              let (fa, fs) = f s  -- apply s to first fn
                  (ga, gs) = g fs -- apply output of first fn to second fn
              in  (fa <> ga, gs)  -- mappend fst in the 2 output tuples 
+
+-- First instinct was to do the obvious:
+-- let (fa, fs) = f s    
+--     (ga, gs) = g f
+-- in  (fa <> ga, fs <> gs) 
+-- But obviously this doesn't work because s lacks a semigroup instance
+
+-- Next idea was to try (ga, gs) = g s in (fa <> ga, gs) 
+-- [ this was a bad idea and didn't really make sense, but I was feeling (╯°□°）╯︵ ┻━┻ ]; 
+-- True to the warning given in the book,
+-- this failed the identity test (rmleft == runMem f' 0). 
+
+-- Breakdown of (rmleft == runMem f' 0):
+
+  -- runMem f' 0 = ("hi", 1):
+    -- runMem f' 0  
+    -- runMem (Mem (\s -> ("hi", s + 1)) 0
+    -- ("hi", 1)
+
+  -- For (ga, gs) = g s, rmleft = ("hi", 0), so rmleft != runMem f' 0:
+    -- rmleft = runMem (f' <> mempty) 0
+    -- (Mem (\s -> ("hi", s + 1)) <> Mem (\s -> (mempty, s))) 0
+    -- fa = "hi", fs = 1             ga = "", gs = 0
+    -- (fa, fs) = f s                (ga, gs) = g s
+    -- comb s = (fa <> ga, gs) = ("hi" <> "", 0)
+
+  -- For (ga, gs) = g fs, rmleft = ("hi", 1), so rmleft == runMem f' 0:
+    -- rmleft = runMem (f' <> mempty) 0
+    -- (Mem (\s -> ("hi", s + 1)) <> Mem (\s -> (mempty, s))) 0
+    -- fa = "hi", fs = 1             ga = "", gs = 1
+    -- (fa, fs) = f s                (ga, gs) = g fs
+    -- comb s = (fa <> ga, gs) = ("hi" <> "", 1)
+
 
 -- ref. @johsi-k's solution:
 -- instance Semigroup a => Semigroup (Mem s a) where
@@ -461,7 +500,7 @@ main2 = do
   print $ rmleft                      -- ("hi", 1)
   print $ rmright                     -- ("hi", 1)
   print $ (rmzero :: (String, Int))   -- ("", 0)
-  print $ rmleft == runMem f' 0       -- True
+  print $ rmleft == runMem f' 0       -- True    
   print $ rmright == runMem f' 0      -- True
 
 
@@ -469,19 +508,27 @@ main :: IO ()
 main = do
   putStrLn "Tests for Trivial:"
   quickCheck (semigroupAssoc :: TrivAssoc)
+  quickCheck (monoidAssoc    :: TrivAssoc)
   putStrLn "Tests for Id:"
   quickCheck (semigroupAssoc :: IdAssocChar)
+  quickCheck (monoidAssoc    :: IdAssocChar)
   quickCheck (semigroupAssoc :: IdAssocInt)
+  quickCheck (monoidAssoc    :: IdAssocInt)
   putStrLn "Tests for Two:"
   quickCheck (semigroupAssoc :: TwoAssoc)
+  quickCheck (monoidAssoc    :: TwoAssoc)
   putStrLn "Tests for Three:"
   quickCheck (semigroupAssoc :: ThreeAssoc)
+  quickCheck (monoidAssoc    :: ThreeAssoc)
   putStrLn "Tests for Four:"
   quickCheck (semigroupAssoc :: FourAssoc)
+  quickCheck (monoidAssoc    :: FourAssoc)
   putStrLn "Tests for BoolConj:"
   quickCheck (semigroupAssoc :: BoolCAssoc)
+  quickCheck (monoidAssoc    :: BoolCAssoc)
   putStrLn "Tests for BoolDisj:"
   quickCheck (semigroupAssoc :: BoolDAssoc)
+  quickCheck (monoidAssoc    :: BoolDAssoc)
   putStrLn "Tests for Or:"
   quickCheck (semigroupAssoc :: OrAssoc)
   putStrLn "Tests for Combine:"
