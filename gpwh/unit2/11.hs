@@ -4,7 +4,7 @@
 
 tail' :: [a] -> [a]
 tail' [] = []
-tail' (x:xs) = xs
+tail' (_:xs) = xs
 
 
 head' :: [a] -> Maybe a
