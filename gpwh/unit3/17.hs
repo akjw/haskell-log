@@ -38,8 +38,8 @@ instance Monoid Color where
   mappend = (<>)
 
 
-type Events = [String]
-type Probs = [Double]
+-- type Events = [String]
+-- type Probs = [Double]
 type Event = String
 type Prob = Double
 
@@ -59,13 +59,13 @@ instance Monoid Probs' where
   mempty = Probs' mempty
 
 
-data PTable = PTable Events Probs
+-- data PTable = PTable Events Probs
 data PTable' = PTable' Events' Probs'
 
-createPTable :: Events -> Probs -> PTable
-createPTable events probs = PTable events normalizedProbs
-  where totalProbs = sum probs
-        normalizedProbs = map (\x -> x/totalProbs) probs
+-- createPTable :: Events -> Probs -> PTable
+-- createPTable events probs = PTable events normalizedProbs
+--   where totalProbs = sum probs
+--         normalizedProbs = map (\x -> x/totalProbs) probs
 
 createPTable' :: Events' -> Probs' -> PTable'
 createPTable' events probs = (PTable' events (Probs' normalizedProbs))
@@ -81,9 +81,9 @@ getDub (Probs' x) = x
 showPair :: Event -> Prob -> String
 showPair event prob = mconcat [event,"|", show prob,"\n"]
 
-instance Show PTable where
-  show (PTable events probs) = mconcat pairs
-    where pairs = zipWith showPair events probs
+-- instance Show PTable where
+--   show (PTable events probs) = mconcat pairs
+--     where pairs = zipWith showPair events probs
 
 instance Show PTable' where
   show (PTable' (Events' e) (Probs' p)) = mconcat pairs
@@ -96,29 +96,29 @@ cartCombine func l1 l2 = zipWith func newL1 cycledL2
         newL1 = mconcat repeatedL1
         cycledL2 = cycle l2
 
-combineEvents :: Events -> Events -> Events
-combineEvents e1 e2 = cartCombine combiner e1 e2
-  where combiner = (\x y -> mconcat [x,"-",y])
+-- combineEvents :: Events -> Events -> Events
+-- combineEvents e1 e2 = cartCombine combiner e1 e2
+--   where combiner = (\x y -> mconcat [x,"-",y])
 
 combineEvents' :: Events' -> Events' -> Events'
 combineEvents' = mappend
 
-combineProbs :: Probs -> Probs -> Probs
-combineProbs p1 p2 = cartCombine (*) p1 p2
+-- combineProbs :: Probs -> Probs -> Probs
+-- combineProbs p1 p2 = cartCombine (*) p1 p2
 
 combineProbs' :: Probs' -> Probs' -> Probs'
-combineProbs' = mappend
+combineProbs' (Probs' p1) (Probs' p2) = Probs' $ cartCombine (*) p1 p2
 
-instance Semigroup PTable where
-  (<>) ptable1 (PTable [] []) = ptable1
-  (<>) (PTable [] []) ptable2 = ptable2
-  (<>) (PTable e1 p1) (PTable e2 p2) = createPTable newEvents newProbs
-    where newEvents = combineEvents e1 e2
-          newProbs = combineProbs p1 p2
+-- instance Semigroup PTable where
+--   (<>) ptable1 (PTable [] []) = ptable1
+--   (<>) (PTable [] []) ptable2 = ptable2
+--   (<>) (PTable e1 p1) (PTable e2 p2) = createPTable newEvents newProbs
+--     where newEvents = combineEvents e1 e2
+--           newProbs = combineProbs p1 p2
 
-instance Monoid PTable where
-  mempty = PTable [] []
-  mappend = (<>)
+-- instance Monoid PTable where
+--   mempty = PTable [] []
+--   mappend = (<>)
 
 instance Semigroup PTable' where
   (<>) ptable1 (PTable' (Events' []) (Probs' [])) = ptable1
@@ -131,14 +131,14 @@ instance Monoid PTable' where
   mempty = PTable' (Events' []) (Probs' [])
   mappend = (<>)
 
-coin :: PTable
-coin = createPTable ["heads","tails"] [0.5,0.5]
+-- coin :: PTable
+-- coin = createPTable ["heads","tails"] [0.5,0.5]
 
 coin' :: PTable'
 coin' = createPTable' (Events' ["heads","tails"]) (Probs' [0.5,0.5])
 
-spinner :: PTable
-spinner = createPTable ["red","blue","green"] [0.1,0.2,0.7]
+-- spinner :: PTable
+-- spinner = createPTable ["red","blue","green"] [0.1,0.2,0.7]
 
 spinner' :: PTable'
 spinner' = createPTable' (Events' ["red","blue","green"]) (Probs' [0.1,0.2,0.7])
