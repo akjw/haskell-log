@@ -34,7 +34,7 @@ createTS times values = TS completeTimes extendedValues
 
 fileToTS :: [(Int,a)] -> TS a
 fileToTS tvPairs = createTS times values
-  where (times, values) = unzip tvPairs
+  where (times, values) = unzip tvPairs -- [(a,b)] -> ([a],[b])
 
 showTVPair :: Show a => Int -> (Maybe a) -> String
 showTVPair time (Just value) = mconcat [show time,"|",show value,"\n"]
@@ -44,6 +44,7 @@ instance Show a => Show (TS a) where
   show (TS times values) = mconcat rows
     where rows = zipWith showTVPair times values
 
+-- Converting all data files into TS types
 ts1 :: TS Double
 ts1 = fileToTS file1
 ts2 :: TS Double
@@ -70,7 +71,10 @@ combineTS (TS t1 v1) (TS t2 v2) = TS completeTimes combinedValues
         updatedMap = foldl insertMaybePair tvMap (zip t2 v2)
         combinedValues = map (\v -> Map.lookup v updatedMap)
                               completeTimes
+        -- look up values in the Map from both TS types --> gives
+        -- list of Maybe values just as in createTS function
 
+-- so as to combine a list of TS values:
 instance Monoid (TS a) where
   mempty = TS [] []
   mappend = (<>)
@@ -78,23 +82,27 @@ instance Monoid (TS a) where
 tsAll :: TS Double
 tsAll = mconcat [ts1,ts2,ts3,ts4]
 
+-- use realToFrac to divide types such as Integer. 
 mean :: (Real a) => [a] -> Double
 mean xs = total/count
   where total = (realToFrac . sum) xs
         count = (realToFrac . length) xs
 
+-- mean has to return a Maybe type; no meaningful result in 2 cases:
+-- an empty time series; a time series in which all values are Nothing.
 meanTS :: (Real a) => TS a -> Maybe Double
 meanTS (TS _ []) = Nothing
 meanTS (TS times values) = if all (== Nothing) values
                            then Nothing
                            else Just avg
   where justVals = filter isJust values
-        cleanVals = map fromJust justVals
+        cleanVals = map fromJust justVals -- (\(Just x) -> x)
         avg = mean cleanVals
 
 type CompareFunc a = a -> a -> a
 type TSCompareFunc a = (Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a)
 
+-- turn generic comparator fn to TS comparator
 makeTSCompare :: Eq a => CompareFunc a -> TSCompareFunc a
 makeTSCompare func = newFunc
   where newFunc (i1, Nothing) (i2, Nothing) = (i1, Nothing)
@@ -105,6 +113,7 @@ makeTSCompare func = newFunc
                         then (i1, Just val1)
                         else (i2, Just val2)
 
+-- compareTS allows trivial creation of other comparison functions for TS
 compareTS :: Eq a => (a -> a -> a) -> TS a -> Maybe (Int, Maybe a)
 compareTS func (TS [] []) = Nothing
 compareTS func (TS times values) = if all (== Nothing) values
@@ -119,6 +128,7 @@ minTS = compareTS min
 maxTS :: Ord a => TS a -> Maybe (Int, Maybe a)
 maxTS = compareTS max
 
+-- modelling change over time
 diffPair :: Num a => Maybe a -> Maybe a -> Maybe a
 diffPair Nothing _ = Nothing
 diffPair _ Nothing = Nothing
@@ -136,14 +146,19 @@ meanMaybe vals = if any (== Nothing) vals
                  else (Just avg)
   where avg = mean (map fromJust vals)
 
+-- smooth data by taking a moving average
+-- similar to the diff, but involves taking the average over a window
+-- the moving average takes a parameter n to set the window size
 movingAvg :: (Real a) => [Maybe a] -> Int -> [Maybe Double]
 movingAvg [] n = []
 movingAvg vals n = if length nextVals == n
-                   then meanMaybe nextVals:movingAvg restVals n
+                   then meanMaybe nextVals:(movingAvg restVals n)
                    else []
   where nextVals = take n vals
         restVals = tail vals
 
+-- need to make sure our moving average is centered
+-- solution: put (n `div` 2) Nothing's at the front and back
 movingAverageTS :: (Real a) => TS a -> Int -> TS Double
 movingAverageTS (TS [] []) n= TS [] []
 movingAverageTS (TS times values) n = TS times smoothedValues
