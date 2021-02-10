@@ -8,8 +8,11 @@ quotes = ["hello"
 lookupQuote :: [String] -> [String]
 lookupQuote [] = []
 lookupQuote ("n":_) = []
-lookupQuote (x:xs) = quote : (lookupQuote xs)
+lookupQuote (x:xs) = if (read x - 1) `elem` [0..(length quotes - 1)] -- validation for the contrary user 
+                     then quote : (lookupQuote xs)
+                     else []
   where quote = quotes !! (read x - 1)
+             
 
 main :: IO ()
 main = do
