@@ -1,4 +1,4 @@
-import Data.List.Split
+-- import Data.List.Split
 
 -- main :: IO ()
 -- main = do
@@ -12,7 +12,7 @@ reverser = do
   putStrLn reversed
 
 
-myLines = splitOn "\n"
+-- myLines = splitOn "\n"
 
 toInts :: String -> [Int]
 toInts = map read . lines
