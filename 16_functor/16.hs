@@ -1,3 +1,9 @@
+{-# HLINT ignore #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances #-}
+
+import GHC.Arr
+
 -- Exercises: Be kind
 -- 1)  *
 -- 2) b :: * -> * ; T :: * -> *
@@ -232,3 +238,201 @@ instance Functor (Sum a) where
 
 -- First / Left cannot be lifted
 
+data Wrap f a =
+  Wrap (f a)
+  deriving (Eq, Show)
+
+instance Functor f => Functor (Wrap f) where
+  fmap f (Wrap fa) = Wrap (fmap f fa)
+
+-- getLine :: IO String
+-- read :: Read a => String -> a
+
+getInt :: IO Int
+getInt = fmap read getLine
+
+-- Prelude> fmap (+1) getInt
+-- 10
+-- 11
+-- Prelude> fmap (++ " and me too!") getLine
+-- hello
+-- "hello and me too!"
+
+meTooIsm :: IO String
+meTooIsm = do
+  input <- getLine
+  return (input ++ "and me too!")
+
+bumpIt :: IO Int
+bumpIt = do
+  intVal <- getInt
+  return (intVal + 1)
+
+type Nat f g = forall a . f a -> g a
+
+-- This'll work
+maybeToList :: Nat Maybe []
+maybeToList Nothing = []
+maybeToList (Just a) = [a]
+
+-- This will not work, not allowed
+-- degenerateMtl :: Nat Maybe []
+-- degenerateMtl Nothing = []
+-- degenerateMtl (Just a) = [a + 1]
+
+data Tuple a b =
+  Tuple a b
+  deriving (Eq, Show)
+
+newtype Flip f a b =
+  Flip (f b a)
+  deriving (Eq, Show)
+
+-- this works, goofy as it looks
+instance Functor (Flip Tuple a) where
+  fmap f (Flip (Tuple a b)) =
+    Flip $ Tuple (f a) b
+
+-- Chapter exercises
+-- 1. data Bool = False | True
+-- No, nothing to lift over
+
+-- 2. data BoolAndSomethingElse a = False' a | True' a
+-- yes
+
+-- 3. data BoolAndMaybeSomethingElse a = Falsish | Truish a
+-- yes
+
+-- 4. newtype Mu f = InF { outF :: f (Mu f) }
+-- no, because kind is (* -> *) -> *
+
+-- 5. data D = D (Array Word Word) Int Int
+-- No, nothing to lift over
+
+--1)
+data Sum' a b =
+    One a
+  | Too b
+
+instance Functor (Sum' e) where
+  fmap _ (One a) = One a
+  fmap f (Too b) = Too (f b)
+
+--2)
+data Company a b c =
+  DeepBlue a c
+  | Something b
+
+instance Functor (Company e e') where
+  fmap _ (Something b) = Something b
+  fmap f (DeepBlue a c) = DeepBlue a (f c)
+
+--3)
+data More b a =
+  L a b a
+  | R b a b
+  deriving (Eq, Show)
+
+instance Functor (More b) where
+  fmap f (L a b a') = L (f a) b (f a')
+  fmap f (R b a b') = R b (f a) b'
+
+-- write functor instances
+--1)
+data Quant a b =
+    Finance
+  | Desk a
+  | Bloor b
+
+instance Functor (Quant a) where
+  fmap _ Finance = Finance
+  fmap _ (Desk a) = Desk a
+  fmap f (Bloor b) = Bloor (f b)
+
+--2)
+data K a b =
+  K a
+
+instance Functor (K a) where
+  fmap _ (K a) = K a
+
+--3)
+newtype Flip' f a b =
+  Flip' (f b a)
+  deriving (Eq, Show)
+  
+newtype K' a b =
+  K' a
+
+instance Functor (Flip' K' a) where
+   fmap f (Flip' (K' a)) =
+    Flip' $ K' (f a)
+
+--4)
+data EvilGoateeConst a b =
+  GoatyConst b
+
+instance Functor (EvilGoateeConst a) where
+  fmap f (GoatyConst b) = GoatyConst (f b)
+
+--5)
+data LiftItOut f a =
+  LiftItOut (f a)
+
+instance Functor f => Functor (LiftItOut f) where
+  fmap f (LiftItOut fa) = LiftItOut (fmap f fa)
+
+--6)
+data Parappa f g a =
+  DaWrappa (f a) (g a)
+
+instance (Functor f , Functor g) => Functor (Parappa f g) where
+  fmap fn (DaWrappa fa ga) = DaWrappa (fmap fn fa) (fmap fn ga)
+
+--7)
+data IgnoreOne f g a b =
+  IgnoringSomething (f a) (g b)
+
+instance Functor g => Functor (IgnoreOne f g a) where
+  fmap fn (IgnoringSomething fa gb) = IgnoringSomething fa (fmap fn gb)
+
+--8)
+data Notorious g o a t =
+  Notorious (g o) (g a) (g t)
+
+instance Functor g => Functor (Notorious g o a) where
+  fmap fn (Notorious go ga gt) = Notorious go ga (fmap fn gt)
+
+--9)
+data List a =
+    Nil
+  | Cons a (List a)
+
+instance Functor List where 
+  fmap _ Nil = Nil
+  fmap f (Cons a lsa) = Cons (f a) (fmap f lsa)
+
+--10)
+data GoatLord a =
+    NoGoat
+  | OneGoat a
+  | MoreGoats (GoatLord a)
+              (GoatLord a)
+              (GoatLord a)
+
+instance Functor GoatLord where 
+  fmap _ NoGoat = NoGoat
+  fmap f (OneGoat a) = OneGoat (f a)
+  fmap f (MoreGoats gla gla' gla'') = MoreGoats (fmap f gla) (fmap f gla') (fmap f gla'')
+
+--11)
+data TalkToMe a =
+    Halt
+  | Print String a
+  | Read (String -> a)
+
+
+instance Functor TalkToMe where
+  fmap _ Halt = Halt
+  fmap f (Print str a) = Print str (f a)
+  fmap f (Read str2a) = Read (fmap f str2a)
