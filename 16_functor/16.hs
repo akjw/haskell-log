@@ -26,6 +26,7 @@ instance Functor FixMePls where
 -- If we replace f with FixMePls:
 -- (a -> b) -> FixMePls a -> FixMePls b
 -- But FixMePls doesn’t take type arguments
+-- w/o type arguments, a functor instance is just fn application to a type constant
 
 data WhoCares a =
   ItDoesnt
