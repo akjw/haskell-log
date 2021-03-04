@@ -66,5 +66,12 @@ instance Functor (Constant a) where
   fmap _ (Constant a) = Constant a
 
 instance Monoid a => Applicative (Constant a) where
-  pure _ = Constant mempty
-  (Constant a) <*> (Constant b) = Constant (a <> b)
+  pure _ = Constant mempty -- partially applied with mempty
+  (Constant a) <*> (Constant b) = Constant (a <> b) 
+  -- since fn app is discarded, mappend is all that's left
+
+-- Exercise: Fixer upper
+-- 1. 
+justHello = const <$> Just "Hello" <*> (pure "World" :: Maybe String)
+-- 2. 
+quatuple = (,,,) <$> Just 90 <*> Just 10<*> Just "Tierness" <*> (pure [1, 2, 3] :: Maybe [Int])
