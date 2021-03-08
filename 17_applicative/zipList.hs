@@ -1,4 +1,3 @@
-
 module ZiplistApp where
 
 import Control.Applicative
