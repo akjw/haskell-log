@@ -43,11 +43,9 @@ instance Applicative ZipList' where
 
   ZipList' _   <*> ZipList' [] = ZipList' [] 
   ZipList' []  <*> ZipList' _   = ZipList' [] 
-  -- ZipList' fs <*> ZipList' xs = ZipList' (zip' fs xs) 
+  ZipList' fs <*> ZipList' xs = ZipList' (zip' fs xs) 
   -- ghc definition:
   -- liftA2 f (ZipList xs) (ZipList ys) = ZipList (zipWith f xs ys)
-
-  ZipList' (f : fs) <*> ZipList' (x : xs) = liftA2 (:) (ZipList' (f x)) <*> (ZipList' fs <*> ZipList' xs)
 
   -- without zip':
   -- (ZipList' y) <*> (ZipList' z) = ZipList' $ go y z
