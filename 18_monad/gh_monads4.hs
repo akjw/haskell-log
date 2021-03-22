@@ -38,3 +38,35 @@ join' mmx = do mx <- mmx -- generator
 -- [1, 2, 3, 4, 5, 6]
 -- > join' (Just (Just 1))
 -- Just 1
+
+--------------------------------------------------------------------------
+-- Monad Laws
+--------------------------------------------------------------------------
+-- ~ identity properties
+return x >>= f = f x
+
+-- :: m a -> (a -> m a) -> m a
+mx >>= return  = m x
+
+-- associativity property (do notation relies on this to work properly)
+(mx >>= f) >>= g = mx >>= (f >>= g) -- this results in type error
+
+(mx >>= f) >>= g = mx >>= (\x -> (f x >>= g)) -- works with lambda
+
+
+--------------------------------------------------------------------------
+-- Effectful Programming
+--------------------------------------------------------------------------
+-- TYPE               -- EFFECT
+a -> Maybe b          -- Exceptions
+a -> [b]              -- Non-determinism
+a -> ST b             -- Internal state
+a -> IO b             -- Input / Output
+
+--------------------------------------------------------------------------
+-- What's the point of monads?
+--------------------------------------------------------------------------
+
+--1) Supports pure programming with effects
+--2) Use of monads is explicit in types (i.e. easy to infer effects from types)
+--3) Can generalize functions to any effect
