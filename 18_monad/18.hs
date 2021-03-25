@@ -1,5 +1,5 @@
 {- HLINT IGNORE -}
-import Control.Monad (join)
+import Control.Monad (join, (>=>))
 import Control.Applicative ((*>))
 
 bind :: Monad m => (a -> m b) -> m a -> m b
@@ -166,12 +166,12 @@ type Coders = Int
 
 data SoftwareShop =
   Shop {
-  founded :: Founded
+    founded :: Founded
   , programmers :: Coders
   } deriving (Eq, Show)
 
 data FoundedError =
-  NegativeYears Founded
+    NegativeYears Founded
   | TooManyYears Founded
   | NegativeCoders Coders
   | TooManyCoders Coders
@@ -199,6 +199,19 @@ mkSoftware years coders = do
     then Left $ TooManyCodersForYears founded programmers
     else Right $ Shop founded programmers
 
+-- Keeping in mind
+-- (<*>) :: Applicative f
+--   => f (a -> b) -> f a -> f b
+-- ap :: Monad m
+--   => m (a -> b) -> m a -> m b
+
+-- deriving Applicative <*> from the stronger instance:
+ap :: (Monad m) => m (a -> b) -> m a -> m b
+ap m m' = do
+  x <- m
+  x' <- m'
+  return (x x')
+
 -- Short Exercise: Either Monad
 data Sum a b =
     First a
@@ -219,3 +232,63 @@ instance Monad (Sum a) where
   return = pure
   (First x)  >>= _    = First x
   (Second y) >>= f    = f y
+
+-- Monad laws
+
+-- right identity
+-- m >>= return = m
+
+-- left identity
+-- return x >>= f = f x
+
+-- associativity
+-- (m >>= f) >>= g = m >>= (\x -> f x >>= g)
+
+sayHi :: String -> IO String
+sayHi greeting = do
+  putStrLn greeting
+  getLine
+
+readM :: Read a => String -> IO a
+readM = return . read
+
+-- (>=>)    :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
+-- flip (.) ::             (a -> b) -> (b -> c) -> a -> c
+-- (.)    :: (b -> c) -> (a -> b) -> a -> c
+-- (>>=) :: Monad m => m a -> (a -> m b) -> m b
+
+getAge :: String -> IO Int
+getAge = sayHi >=> readM
+
+askForAge :: IO Int
+askForAge = getAge "Hello! How old are you? "
+
+-- 1.
+j :: Monad m => m (m a) -> m a
+j x = join x
+-- j x = x >>= id
+
+-- 2. 
+l1 :: Monad m => (a -> b) -> m a -> m b
+l1 f x = fmap f x
+
+-- 3. 
+l2 :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+l2 f x y = f <$> x <*> y
+-- l2 = liftM2
+
+-- 4. 
+a :: Monad m => m a -> m (a -> b) -> m b
+a x f = f <*> x
+
+-- 5. You’ll need recursion for this one:
+meh :: Monad m => [a] -> (a -> m b) -> m [b]
+meh [] _ = return []
+meh (x:xs) f = do 
+  y <- f x
+  ys <- meh xs f
+  return (y:ys)
+
+-- 6. Hint: reuse meh:
+flipType :: (Monad m) => [m a] -> m [a]
+flipType ms = meh ms id

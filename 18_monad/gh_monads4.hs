@@ -1,5 +1,5 @@
 {- HLINT Ignore -}
-import Data.Char ( isDigit, digitToInt ) 
+import Data.Char ( isDigit, digitToInt )
 
 --------------------------------------------------------------------------
 -- Generic fns ( to work with any monad; many found in Control.Monad)

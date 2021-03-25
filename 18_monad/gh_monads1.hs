@@ -35,7 +35,7 @@ data Expr = Val Int | Div Expr Expr
 -- basic fn; doesn't deal with zero division --> will crash
 eval1 :: Expr -> Int
 eval1 (Val n) = n
-eval1 (Div x y) = eval x `div` eval y
+eval1 (Div x y) = eval1 x `div` eval1 y
 
 -- Approach 1: use Maybe:
 safediv :: Int -> Int -> Maybe Int
@@ -45,18 +45,18 @@ safediv n m = Just (n `div` m)
 -- works, but tedious:
 eval2 :: Expr -> Maybe Int
 eval2 (Val n) = Just n
-eval2 (Div x y) = case eval x of 
+eval2 (Div x y) = case eval2 x of 
                        Nothing -> Nothing -- propagate failure
-                       Just n  -> case eval y of
+                       Just n  -> case eval2 y of
                                        Nothing -> Nothing -- propagate failure
                                        Just m  -> safediv n m
 
 -- Approach 2: rewrite 1 w/ Applicative style?
 eval3 :: Expr -> Maybe Int
 eval3 (Val n) = pure n -- using Maybe Applicative; will embed into Just
-eval3 (Div x y) = pure safediv <*> eval x <*> eval y
+eval3 (Div x y) = pure safediv <*> eval3 x <*> eval3 y
                 -- type error:
-                -- eval x :: Maybe Int ; eval y :: Maybe Int
+                -- eval3 x :: Maybe Int ; eval3 y :: Maybe Int
                 -- pure safediv needs to be Int -> Int -> Int (i.e. pure function)
                 -- actual type is Int -> Int -> Maybe Int (safediv is NOT a safe fn)
 

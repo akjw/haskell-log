@@ -22,7 +22,7 @@ class Applicative m => Monad m where
 
 -- EX 1: Maybe Monad
 instance Monad Maybe where
-  -- (>>=) :: Maybe a -> (a -> Maybe b) Maybe b
+  -- (>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b
   Nothing >>= f = Nothing -- propagate failure
   Just x  >>= f = f x
 -- definition above is what makes do notation work 
@@ -32,7 +32,7 @@ instance Monad [] where
   -- (>>=) :: [a] -> (a -> [b]) -> [b]
   [] >>= f = []
   xs >>= f =  concat $ map f xs -- [[b]] -> [b]
-          -- = [y | x <xs, y <- f x]
+          -- = [y | x <- xs, y <- f x]
 
 -- > pairs [1, 2] [3, 4]
 -- [(1,3), (1,4), (2,3), (2,4)]
