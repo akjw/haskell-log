@@ -2,14 +2,27 @@
 import Data.Monoid
 import Data.Foldable
 
+data Identity a =
+  Identity a
+  deriving (Eq, Show)
 
--- instance Foldable Optional where
---   foldr _ z Nada = z
---   foldr f z (Yep x) = f x z
---   foldl _ z Nada = z
---   foldl f z (Yep x) = f z x
---   foldMap _ Nada = mempty
---   foldMap f (Yep a) = f a
+instance Foldable Identity where
+  foldr f z (Identity x) = f x z
+  foldl f z (Identity x) = f z x
+  foldMap f (Identity x) = f x
+
+data Optional a =
+  Nada 
+  | Yep a
+  deriving (Eq, Show)
+
+instance Foldable Optional where
+  foldr _ z Nada = z
+  foldr f z (Yep x) = f x z
+  foldl _ z Nada = z
+  foldl f z (Yep x) = f z x
+  foldMap _ Nada = mempty
+  foldMap f (Yep a) = f a
 
 -- | The largest element
 -- of a non-empty structure.
@@ -17,6 +30,8 @@ import Data.Foldable
 -- | The least element
 -- of a non-empty structure.
 -- minimum :: Ord a => t a -> a
+
+-- Left & Nothing are considered empty values for the above fns
 
 -- Exercises
 
@@ -35,7 +50,6 @@ elem' x = getAny . foldMap (\el -> Any (el == x))
 
 --4)
 minimum' :: (Foldable t, Ord a) => t a -> Maybe a
--- minimum = getAlt . foldMap (Alt . Just)
 minimum' = foldr fmin Nothing
   where 
     fmin x Nothing = Just x
@@ -110,4 +124,4 @@ instance Foldable (Four' a) where
 
 -- 6.
 filterF :: ( Applicative f, Foldable t, Monoid (f a)) => (a -> Bool) -> t a -> f a
-filterF f = foldMap (\a -> case f a of True -> pure a; False -> mempty)
+filterF f = foldMap (\a -> if f a then pure a else mempty)
