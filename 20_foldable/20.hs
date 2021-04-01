@@ -2,6 +2,51 @@
 import Data.Monoid
 import Data.Foldable
 
+-- fold: does not take a fn; requires monoidal instance to be specified for elements that have multiples instances 
+-- xs :: [Product Integer]
+-- xs = [1, 2, 3, 4, 5]
+-- fold xs = Product {getProduct = 120}
+
+-- sometimes compiler can infer appropriate instance:
+-- Prelude> fold ["hello", " julie"]
+-- "hello julie"
+
+-- foldMap: takes a fn, but the fn argument must explicitly map a Monoid to every element
+
+-- Prelude> foldMap Sum [1, 2, 3, 4]
+-- Sum {getSum = 10}
+-- Prelude> foldMap Product [1, 2, 3, 4]
+-- Product {getProduct = 24}
+-- Prelude> foldMap All [True, False, True]
+-- All {getAll = False}
+-- Prelude> foldMap Any [(3 == 4), (9 > 5)]
+-- Any {getAny = True}
+-- Prelude> xs = [Just 1, Nothing, Just 5]
+-- Prelude> foldMap First xs
+
+-- can also have a fn diff from monoid being used
+-- in which case the fn is mapped to each value first, then monoid instance used to reduce
+-- to a summary value:
+-- Prelude> xs = map Sum [1..3]
+-- Prelude> foldMap (*5) xs
+-- Sum {getSum = 30}
+-- 5 + 10 + 15
+-- 30
+
+-- Declaring monoid instance doesn't have an impact if there's only one value (no folding occurs):
+-- Prelude> fm = foldMap (*5)
+-- Prelude> fm (Just 100) :: Product Integer
+-- Product {getProduct = 500}
+-- Prelude> fm (Just 5) :: Sum Integer
+-- Sum {getSum = 25}
+
+-- But mempty value from monoid instance will be used for empty structures:
+-- Prelude> fm Nothing :: Sum Integer
+-- Sum {getSum = 0}
+-- Prelude> fm Nothing :: Product Integer
+-- Product {getProduct = 1}
+
+
 data Identity a =
   Identity a
   deriving (Eq, Show)
@@ -91,6 +136,7 @@ data Constant a b = Constant b deriving (Eq, Show)
 
 -- with reference to instances for Identity & Optional:
 instance Foldable (Constant a) where
+  -- foldr :: (b -> c -> c) -> c -> Constant a b -> c
   foldr f z (Constant b) = f b z
   foldMap f (Constant b) = f b
 
@@ -98,6 +144,7 @@ instance Foldable (Constant a) where
 data Two a b = Two a b deriving (Eq, Show)
 
 instance Foldable (Two a) where
+  -- foldr :: (b -> c -> c) -> c -> Two a b -> c
   foldr f z (Two _ b) = f b z
   foldMap f (Two _ b) = f b
 
@@ -105,6 +152,7 @@ instance Foldable (Two a) where
 data Three a b c = Three a b c deriving (Eq, Show)
 
 instance Foldable (Three a b) where
+  -- foldr :: (c -> d -> d) -> d -> Three a b c -> d
   foldr f z (Three _ _ c) = f c z
   foldMap f (Three _ _ c) = f c
 
@@ -112,15 +160,18 @@ instance Foldable (Three a b) where
 data Three' a b = Three' a b b deriving (Eq, Show)
 
 instance Foldable (Three' a) where
-  foldMap f (Three' _ b c) = f b <> f c
-  foldr f z (Three' _ b c) = f b (f c z) -- or: (f b . f c) z
+  -- foldr :: (b -> c -> c) -> c -> Three' a b -> c
+  foldr f z (Three' _ b b') = f b (f b' z) -- or: (f b . f c) z
+  foldMap f (Three' _ b b') = f b <> f b'
 
 -- 5. 
 data Four' a b = Four' a b b b deriving (Eq, Show)
 
 instance Foldable (Four' a) where
-  foldMap f (Four' _ a b c) = f a <> f b <> f c
-  foldr f z (Four' _ a b c) = (f a . f b . f c) z -- or: f a $ f b $ f c z
+  -- foldr :: (b -> c -> c) -> c -> Four' a b -> c
+  foldr f z (Four' _ b b' b'') = (f b . f b' . f b'') z -- or: f b $ f b' $ f b'' z
+  foldMap f (Four' _ b b' b'') = f b <> f b' <> f b''
+  
 
 -- 6.
 filterF :: ( Applicative f, Foldable t, Monoid (f a)) => (a -> Bool) -> t a -> f a
