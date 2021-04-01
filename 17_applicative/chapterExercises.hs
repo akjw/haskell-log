@@ -189,7 +189,7 @@ instance (Monoid a, Monoid b, Monoid c) => Applicative (Four a b c) where
   (Four a b c d) <*> (Four w x y z) = Four (a <> w) (b <> x) (c <> y) (d z)
 
 instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) => Arbitrary (Four a b c d) where
-  arbitrary = Four <$> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = Four <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 instance (Eq a, Eq b, Eq c, Eq d) => EqProp (Four a b c d) where
   (=-=) = eq
