@@ -1,14 +1,10 @@
-{-HLINT Ignore -}
-module HttpStuff where
-
-import Data.ByteString.Lazy hiding (map)
--- import Network.Wreq
+{- HLINT Ignore -}
 
 -- class (Functor t, Foldable t) => Traversable t where
 --   traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
 --   traverse f = sequenceA . fmap f
 
--- traverse fn maps each element of a structure to an action, evaluates from lef to Righ, then collects the results 
+-- traverse fn maps each element of a structure to an action, evaluates from lef to right, then collects the results 
 
 -- fmap :: Functor f => (a -> b) -> f a -> f b
 -- traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
@@ -19,44 +15,38 @@ import Data.ByteString.Lazy hiding (map)
 -- wrong :: [IO Record]
 -- wrong = fmap myFunc myData
 
--- Righ :: IO [Record]
--- Righ = traverse myFunc myData
+-- Right :: IO [Record]
+-- Right = traverse myFunc myData
 
--- Evaluate each action in the structure from lef to Righ,
--- and collect the results:
+-- Evaluate each action in the structure from left to right,
+-- then collect results:
   -- sequenceA :: Applicative f => t (f a) -> f (t a)
   -- sequenceA = traverse id
-    -- flips 2 contexts or structures; by itself, it doesn't allow for
-    -- fn app to value inside structure. i.e. only flips context
+    -- flips 2 contexts or structures; doesn't transform value inside structure, unlike traverse. i.e. only flips context
 
--- Prelude> fmap Just [1, 2, 3]
--- [Just 1,Just 2,Just 3]
--- Prelude> sequenceA $ fmap Just [1, 2, 3]
--- Just [1,2,3]
--- Prelude> xs = [Just 1, Just 2, Just 3]
--- Prelude> sequenceA xs
--- Just [1,2,3]
--- Prelude> xsn = [Just 1, Just 2, Nothing]
--- Prelude> sequenceA xsn
--- Nothing
--- Prelude> fmap sum $ sequenceA xs
--- Just 6
--- Prelude> fmap product (sequenceA xsn)
--- Nothing
+-- fmap Just [1, 2, 3] = [Just 1,Just 2,Just 3]
+-- sequenceA $ fmap Just [1, 2, 3] = Just [1,2,3]
 
--- use catMaybe to sum list of Maybe values, even if Nothing value exists:
-  -- Prelude> import Data.Maybe
-  -- Prelude> xs = [Just 1, Just 2, Just 3]
-  -- Prelude> catMaybes xs
-  -- [1,2,3]
-  -- Prelude> xsn = [Just 1, Just 2, Nothing]
-  -- Prelude> catMaybes xsn
-  -- [1,2]
-  -- Prelude> xsn' = xs ++ [Nothing]
-  -- Prelude> sum $ catMaybes xsn'
-  -- 6
-  -- Prelude> fmap sum $ sequenceA xsn'
-  -- Nothing
+-- xs = [Just 1, Just 2, Just 3]
+-- sequenceA xs = Just [1,2,3]
+
+-- xsn = [Just 1, Just 2, Nothing]
+-- sequenceA xsn = Nothing
+
+-- fmap sum $ sequenceA xs = Just 6
+-- fmap product (sequenceA xsn) = Nothing
+
+-- use catMaybe (from Data.Maybe) to sum list of Maybe values, ignore Nothing values:
+
+  -- xs = [Just 1, Just 2, Just 3]
+  -- catMaybes xs = [1,2,3]
+
+  -- xsn = [Just 1, Just 2, Nothing]
+  -- catMaybes xsn = [1,2]
+
+  -- xsn' = xs ++ [Nothing]
+  -- sum $ catMaybes xsn' = 6
+  -- fmap sum $ sequenceA xsn' = Nothing
 
 -- sequence A . fmap f can always be replaced by traverse 
 
@@ -67,51 +57,6 @@ import Data.ByteString.Lazy hiding (map)
 -- sequence is useful for flipping your types around
 -- sequence :: (Monad m, Traversable t) => t (m a) -> m (t a)
 
-data Query = Query
-data SomeObj = SomeObj
-data IoOnlyObj = IoOnlyObj
-data Err = Err
-
-decodeFn :: String -> Either Err SomeObj
-decodeFn = undefined
-
-fetchFn :: Query -> IO [String]
-fetchFn = undefined
-
-makeIoOnlyObj :: [SomeObj] -> IO [(SomeObj, IoOnlyObj)]
-makeIoOnlyObj = undefined
-
-pipelineFn :: Query -> IO (Either Err [(SomeObj, IoOnlyObj)])
-pipelineFn query = do
-  a <- fetchFn query
-  case sequence (map decodeFn a) of
-    (Left err) -> return $ Left err
-    (Right res) -> do
-      a <- makeIoOnlyObj res
-      return $ Right a
-
-pipelineFn' :: Query -> IO (Either Err [(SomeObj, IoOnlyObj)])
-pipelineFn' query = do
-  a <- fetchFn query -- a :: [String]
-  traverse makeIoOnlyObj 
-    (mapM decodeFn a) 
-    -- 1) decodeFn :: String -> Either Err SomeObj
-    -- 2) mapM decodeFn a 
-      -- :: (String -> Either Err SomeObj) -> [String] -> Either Err [SomeObj]
-    -- 3) traverse makeIoOnlyObj (mapM decodeFn a)
-      -- :: ([SomeObj] -> IO [(SomeObj, IoOnlyObj)])
-      -- -> Either Err [SomeObj] -> IO (Either Err [(SomeObj, IoOnlyObj)])
-
-urls :: [String]
-urls = [ "http://httpbin.org/ip"
-        , "http://httpbin.org/bytes/5"
-        ]
-
--- mappingGet :: [IO (Response ByteString)]
--- mappingGet = map get urls
-
--- traversedUrls :: IO [Response ByteString]
--- traversedUrls = traverse get urls
 
 -- Traversable Instances:
 
