@@ -62,28 +62,30 @@
 
 -- Either
 
+import Control.Monad (join)
+import Data.Maybe (fromMaybe)
 data Either' a b =
   Lef a
-  | Righ b deriving (Eq, Ord, Show)
+  | Ri b deriving (Eq, Ord, Show)
   
 instance Functor (Either' a) where
   fmap _ (Lef x) = Lef x
-  fmap f (Righ y) = Righ (f y)
+  fmap f (Ri y) = Ri (f y)
 
 instance Applicative (Either' e) where
-  pure = Righ
+  pure = Ri
   Lef e <*> _ = Lef e
-  Righ f <*> r = fmap f r
+  Ri f <*> r = fmap f r
 
 instance Foldable (Either' a) where
   foldMap _ (Lef _) = mempty
-  foldMap f (Righ y) = f y
+  foldMap f (Ri y) = f y
   foldr _ z (Lef _) = z
-  foldr f z (Righ y) = f y z
+  foldr f z (Ri y) = f y z
 
 instance Traversable (Either' a) where
   traverse _ (Lef x) = pure (Lef x)
-  traverse f (Righ y) = Righ <$> f y
+  traverse f (Ri y) = Ri <$> f y
 
 -- Tuple
 -- instance Functor ((,) a) where
