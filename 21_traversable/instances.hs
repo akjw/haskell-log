@@ -209,7 +209,7 @@ instance Foldable n => Foldable (S n) where
   foldMap f (S na a) = foldMap f na <> f a
 
 instance Traversable n => Traversable (S n) where
-  -- traverse :: Applicative f => (b -> f c) -> S a b -> f (S a c)
+  -- traverse :: Applicative f => (b -> f c) -> S x b -> f (S x c)
   traverse f (S na a) = S <$> traverse f na <*> f a
 
 -- 10)
