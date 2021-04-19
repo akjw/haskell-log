@@ -70,3 +70,24 @@ a -> IO b             -- Input / Output
 --1) Supports pure programming with effects
 --2) Use of monads is explicit in types (i.e. easy to infer effects from types)
 --3) Can generalize functions to any effect
+
+-- Exercise
+data Expr a = Var a | Val Int | Add (Expr a) (Expr a)
+
+-- represent x + 1
+Add (Var 'x') (Val 1) :: Expr Char 
+
+Add (Var "x") (Val 1) :: Expr String
+
+instance Monad Expr where
+  -- return :: a -> Expr a
+  return x = Var x
+  -- (>>=) :: Expr a -> (a -> Expr b) -> Expr b
+  (Var v) >>= f = f v
+  -- v :: a, Var v :: Expr a, f :: a -> Expr b
+  (Val n) >>= f = Val n
+  -- Val n :: Expr a, f :: a -> Expr b
+  (Add x y) >>= f = Add (x >>= f) (y >>= f)
+  -- Add x y :: Expr a, x, y :: Expr a, f :: a -> Expr b 
+
+

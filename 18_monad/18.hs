@@ -292,3 +292,27 @@ meh (x:xs) f = do
 -- 6. Hint: reuse meh:
 flipType :: (Monad m) => [m a] -> m [a]
 flipType ms = meh ms id
+
+twoArg :: Float -> Int -> String
+twoArg = undefined 
+
+oneArg :: String -> Bool
+oneArg = undefined 
+
+cmpose :: Float -> Int -> Bool
+cmpose = (oneArg .) . twoArg
+
+
+mcomp0 :: Monad m => (b -> m c)
+  -> (a -> m b) -> a -> m c
+mcomp0 f g a = join (f <$> (g a))
+
+
+g :: Integral a => a -> Maybe Double
+g x = (Just $ (fromIntegral x) / 2) 
+
+
+f' :: Real a => a -> Maybe Float
+f' x = (Just (sqrt (realToFrac x))) 
+
+test2 =  mcomp0 f' g (1::Int)
