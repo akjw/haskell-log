@@ -174,10 +174,18 @@ getDogR =
   -> (r -> b)
 (<$->>) = (<$>)
 
+-- <$->> :: (DogName -> (Address -> Dog))
+--     -> (Person -> DogName)
+--     -> (Person -> (Address -> Dog))
+
 (<*->>) :: (r -> a -> b)
   -> (r -> a)
   -> (r -> b)
 (<*->>) = (<*>)
+
+-- <*->> :: (Person -> (Address -> Dog))
+--     -> (Person -> Address)
+--     -> (Person -> Dog)
 
 -- with Reader
 getDogR' :: Person -> Dog
