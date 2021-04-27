@@ -16,12 +16,12 @@ class Functor f where
   fmap :: (a -> b) -> f a -> f b
 
 class Functor f => Applicative f where
-  pure :: a -> f a
+  pure  :: a -> f a
   (<*>) :: f (a -> b) -> f a -> f b
 
 class Applicative f => Monad f where
   return :: a -> f a
-  (>>=) :: f a -> (a -> f b) -> f b
+  (>>=)  :: f a -> (a -> f b) -> f b
 
 instance Functor ((->) r) where
   fmap = (.)

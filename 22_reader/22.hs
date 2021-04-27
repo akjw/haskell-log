@@ -8,13 +8,17 @@ boop = (*2)
 doop = (+10)
 
 -- Functorial context 
--- result of one fn passed to the other
+-- result of applying doop will be passed to boop
 bip :: Integer -> Integer
 bip = boop . doop
 
+-- fmap allows us to map a fn over a structure;
+-- here, that structure is a partially applied fn
 bloop :: Integer -> Integer
 bloop = fmap boop doop
+-- fmap composes the fns, then applies them:
 -- fmap boop doop x == (*2) ((+10) x)
+
 
 -- Applicative context: (lift over partially applied fns)
 -- argument is passed to both boop & doop in parallel, after which the results are added 
@@ -24,6 +28,10 @@ bbop = (+) <$> boop <*> doop
 -- (3*2) + (3+10)
 -- 6 + 13
 -- 19
+
+-- * (+) <$> (*2) is identical to (+) . (*2)
+-- i.e. !!!the Functor of functions is function composition!!!
+-- ergo, fmap (+1) (*2) 3 = 7; fmap (+2) (*1) 2 = 4
 
 
 -- ((+) <$> (*2)) 5 3
@@ -38,13 +46,29 @@ bbop = (+) <$> boop <*> doop
 -- (\5 -> (+) (2 * 5)) 3
 -- ((+) 10) 3
 
+--------------------------------------------------------------
+-- Pattern for feeding 1 arg to 2 fns, then using the 2 results as inputs to a final fn:
+--------------------------------------------------------------
+
+-- ((+)) <$> (*2) <*> ((+10)) 3
+-- (3 * 2) + (3 + 10)
+-- 6 + 13
+-- 19
+
+
 duwop :: Integer -> Integer
 duwop = liftA2 (+) boop doop
 
 
+-- same as applicative eg, but in monadic context:
+boopDoop :: Integer -> Integer
+boopDoop = do
+  a <- boop
+  b <- doop
+  return (a + b)
 
 
-
+-- Exercise: Warming up
 
 cap :: [Char] -> [Char]
 cap xs = map toUpper xs
@@ -81,8 +105,14 @@ tupledBind =
 -- is
 -- r ->
 
-  -- r is part of the structure being lifted over 
+  -- r (arg to the fn) is part of the structure being lifted over 
 
+
+
+-- Reader
+
+-- newtype wrapper for the fn type
+-- runReader gets fn out of Reader
 newtype Reader r a = Reader { runReader :: r -> a }
 
 instance Functor (Reader r) where
@@ -91,13 +121,14 @@ instance Functor (Reader r) where
   --     -> Reader r b
   fmap f (Reader ra) =
     Reader $ \r -> f (ra r)
+
+
 -- same as (.)
 compose :: (b -> c) -> (a -> b) -> (a -> c)
 compose f g = \x -> f (g x)
 
--- \r -> f (ra r)
 -- ra :: r -> a, f :: a -> b, ra r :: a, f (ra r) :: b
-
+-- \r -> f (ra r)
 -- \x -> f (g x)
 
 -- another version of an instance:
@@ -109,8 +140,9 @@ compose f g = \x -> f (g x)
 --     Reader $ (f . ra) 
     -- compose & apply first, then feed result back to Reader constructor
 
+-- Exercise: Ask
 ask :: Reader a a
-ask = Reader id
+ask = Reader id -- HLINT suggestion to replace (\a -> a)
 
 -- Applicative of fns
 -- Applicative f =>
@@ -201,7 +233,7 @@ getDogR1 :: Person -> Dog
 getDogR1 =
   liftA2 Dog dogName address
 
--- Reading comprehension
+-- Exercise: Reading comprehension
 
 -- 1) 
 
@@ -215,6 +247,7 @@ myLiftA2 f a b = f <$> a <*> b
 asks :: (r -> a) -> Reader r a
 asks f = Reader f
 
+
 -- 3)
 
 instance Applicative (Reader r) where
@@ -226,6 +259,14 @@ instance Applicative (Reader r) where
     -> Reader r b
   (Reader rab) <*> (Reader ra) =
     Reader $ \r -> rab r (ra r)
+
+-- compare with fmap:
+-- f <$> (Reader ra) =
+--     Reader $ \r -> f (ra r)
+
+-- the only difference is that apply also takes r as an arg
+
+-- Breakdown of types:
 -- type needed = r -> b
 -- rab :: r -> a -> b
 -- ra :: r -> a
@@ -254,7 +295,7 @@ barOne r = (r, length r)
 barPlus :: (Functor t, Num a, Foldable t) => t a -> (t a, Int)
 barPlus r = (foo r, length r)
 
--- even more compact
+-- even more compact; both fns waiting for the same arg
 frooty :: Num a => [a] -> ([a], Int)
 frooty r = bar (foo r) r
 
@@ -270,13 +311,15 @@ fooBind m k = \r -> k (m r) r
 
 -- Note similarity with bind
 -- (>>=) :: Monad m =>
---   m a -> (a -> (m b)) -> m b
+--    m a     -> (a -> (m b))    -> m b
 --   (r -> a) -> (a -> (r -> b)) -> (r -> b)
+
+
 
 -- Monad instance
 
 -- return :: Monad m => a -> m a
--- return :: a -> r -> a
+-- return ::            a -> r -> a
 
 getDogRM :: Person -> Dog
 getDogRM = do
@@ -284,7 +327,7 @@ getDogRM = do
   addy <- address
   return $ Dog name addy
 
--- Reader Monad
+-- Exercise: Reader Monad
 -- 1)
 
 -- Don't forget InstanceSigs.
@@ -295,6 +338,9 @@ instance Monad (Reader r) where
         -> Reader r b
   (Reader ra) >>= aRb =
     Reader $ \r -> runReader (aRb (ra r)) r
+  --  (Reader r) >>= f = 
+  --    Reader $ \e -> runReader (f (r e)) e
+  
 -- type needed = r -> b
 -- aRb :: (a -> Reader r b)
 -- ra :: r -> a
