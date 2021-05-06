@@ -6,6 +6,8 @@ import Control.Monad.Trans.State
 import System.Random
 import RandomExample
 
+
+
 intToDie :: Int -> Die
 intToDie n =
   case n of
@@ -31,11 +33,12 @@ intToDie n =
 -- shortened:
 rollDie' :: State StdGen Die
 rollDie' =
-  intToDie <$> state (randomR (1, 6))
+  intToDie <$> state (randomR (1, 6)) 
+  -- state :: Monad m => (s -> (a, s)) -> StateT s m a (construct state monad from fn)
 
 rollDieThreeTimes' :: State StdGen (Die, Die, Die)
 rollDieThreeTimes' =
-  liftA3 (,,) rollDie rollDie rollDie
+  liftA3 (,,) rollDie' rollDie' rollDie'
 
 -- This repeats a single die value:
 -- repeat :: a -> [a]
@@ -45,7 +48,7 @@ rollDieThreeTimes' =
 -- This repeats the state action which produces a die:
 -- replicateM :: Monad m => Int -> m a -> m [a]
 nDie :: Int -> State StdGen [Die]
-nDie n = replicateM n rollDie
+nDie n = replicateM n rollDie'
 
 rollsToGetTwenty :: StdGen -> Int
 rollsToGetTwenty g = go 0 0 g
