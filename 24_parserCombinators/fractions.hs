@@ -38,9 +38,10 @@ virtuousFraction = do
   char '/'
   denominator <- decimal
   case denominator of
-    0 -> fail "Denominator cannot be zero"
+    0 -> fail "Denominator cannot be zero" -- calls out failure explicitly
     _ -> return (numerator % denominator)
 
+-- will return Failure value w/ cause of failure + program continues
 testVirtuous :: IO ()
 testVirtuous = do
   let virtuousFraction' =
@@ -49,3 +50,51 @@ testVirtuous = do
   print $ virtuousFraction' alsoBad
   print $ virtuousFraction' shouldWork
   print $ virtuousFraction' shouldAlsoWork
+
+-- unit of success
+successfulInteger :: Parser Integer
+successfulInteger = integer >>= \i -> eof >> return i
+-- successfulInteger = do
+--   i <- integer 
+--   eof
+--   return i
+
+testSuccess :: IO ()
+testSuccess = do
+  let successfulInteger' =
+        parseString successfulInteger mempty
+  print $ successfulInteger' "123"
+  print $ successfulInteger' "123abc"
+
+
+-- minimal complete def requires: try, <?>, notFollowedBy
+
+-- Text.Parser.Combinators
+-- class Alternative m => Parsing m where
+--   try :: m a -> m a (takes parser that may consume input; reruns on failure; fails if no input is consumed)
+
+-- allows matching on keywords 
+-- notFollowedBy :: Show a => m a -> m ()
+-- > noAlpha = notFollowedBy alphaNum
+-- > keywordLet =
+-- try $ string "let" <* noAlpha
+
+-- from Text.Parser.Char
+
+-- Parses any single character other
+-- than the one provided. Returns
+-- the character parsed.
+-- notChar :: Char -> m Char
+
+-- Parser succeeds for any character.
+-- Returns the character parsed.
+-- anyChar :: m Char
+
+-- Parses a sequence of characters, returns
+-- the string parsed.
+-- string :: String -> m String
+
+-- Parses a sequence of characters
+-- represented by a Text value,
+-- returns the parsed Text fragment.
+-- text :: Text -> m Text
