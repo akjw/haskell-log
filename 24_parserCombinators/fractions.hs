@@ -66,7 +66,6 @@ testSuccess = do
   print $ successfulInteger' "123"
   print $ successfulInteger' "123abc"
 
-
 -- minimal complete def requires: try, <?>, notFollowedBy
 
 -- Text.Parser.Combinators
@@ -98,3 +97,22 @@ testSuccess = do
 -- represented by a Text value,
 -- returns the parsed Text fragment.
 -- text :: Text -> m Text
+
+
+-- trytry
+type IntegerOrFraction =
+  Either Rational Integer
+
+parseIOF :: Parser IntegerOrFraction
+parseIOF =
+    try (Left <$> virtuousFraction) 
+  <|> try (Right <$> integer) 
+
+testIOF :: IO ()
+testIOF = do
+  let parseIOF' =
+        parseString parseIOF mempty
+  print $ parseIOF' "123"
+  print $ parseIOF' "007" -- will parse as 7
+  print $ parseIOF' shouldWork
+  print $ parseIOF' shouldAlsoWork
